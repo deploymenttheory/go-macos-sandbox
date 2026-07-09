@@ -4,11 +4,8 @@ package bookmark
 
 import (
 	"fmt"
-	"unsafe"
 
 	foundation "github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/framework/foundation"
-	"github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/obj"
-	"github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/rt"
 )
 
 // ScopedResource grants temporary access to a security-scoped URL in a sandboxed app.
@@ -42,13 +39,8 @@ func ResolveSecurityScopedBookmark(bookmarkData []byte, relativeTo string) (*Sco
 	if len(bookmarkData) == 0 {
 		return nil, fmt.Errorf("bookmark data is empty")
 	}
-	data := foundation.DataWithBytesLength(unsafe.Pointer(&bookmarkData[0]), len(bookmarkData))
-	if data == nil {
-		return nil, fmt.Errorf("failed to create bookmark data object")
-	}
-
-	url, _, err := foundation.URLByResolvingBookmarkDataOptionsRelativeToURLBookmarkDataIsStaleError(
-		data,
+	url, _, err := foundation.URLByResolvingBookmarkDataOptionsRelativeToURLBookmarkDataIsStale(
+		bookmarkData,
 		foundation.URLBookmarkResolutionWithSecurityScope,
 		relativeTo,
 	)
@@ -60,7 +52,7 @@ func ResolveSecurityScopedBookmark(bookmarkData []byte, relativeTo string) (*Sco
 
 // SecurityScopedBookmarkForPath creates security-scoped bookmark data for path.
 func SecurityScopedBookmarkForPath(path string, readOnly bool) ([]byte, error) {
-	url := foundation.FileURLWithPath(path)
+	url := foundation.NewURLFileURLWithPath(path)
 	if url == nil {
 		return nil, fmt.Errorf("invalid path %q", path)
 	}
@@ -70,14 +62,14 @@ func SecurityScopedBookmarkForPath(path string, readOnly bool) ([]byte, error) {
 		options |= foundation.URLBookmarkCreationSecurityScopeAllowOnlyReadAccess
 	}
 
-	data, err := url.BookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(options, nil, "")
+	data, err := url.BookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURL(options, nil, "")
 	if err != nil {
 		return nil, err
 	}
-	if data == nil {
-		return nil, fmt.Errorf("bookmark data is nil")
+	if len(data) == 0 {
+		return nil, fmt.Errorf("bookmark data is empty")
 	}
-	return rt.NSDataToBytes(obj.ID(data)), nil
+	return data, nil
 }
 
 // Path returns the filesystem path for the scoped URL.

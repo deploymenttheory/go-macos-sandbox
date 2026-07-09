@@ -101,7 +101,7 @@ func SigningIdentifierAtPath(path string) (string, error) {
 		return "", err
 	}
 
-	url := foundation.FileURLWithPath(path)
+	url := foundation.NewURLFileURLWithPath(path)
 	if url == nil {
 		return "", fmt.Errorf("invalid path %q", path)
 	}
@@ -149,7 +149,7 @@ func entitlementsFromPath(path string) (map[string]any, error) {
 		return nil, err
 	}
 
-	url := foundation.FileURLWithPath(path)
+	url := foundation.NewURLFileURLWithPath(path)
 	if url == nil {
 		return nil, fmt.Errorf("invalid path %q", path)
 	}

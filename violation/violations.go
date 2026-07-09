@@ -57,7 +57,7 @@ func RecentViolations(since time.Duration, maxRows int) ([]Violation, error) {
 		maxRows = defaultViolationMaxRows
 	}
 
-	store, err := oslog.LocalStoreAndReturnError()
+	store, err := oslog.LocalStore()
 	if err != nil {
 		return nil, fmt.Errorf("open unified log store: %w", err)
 	}
@@ -67,10 +67,7 @@ func RecentViolations(since time.Duration, maxRows int) ([]Violation, error) {
 
 	var position *oslog.LogPosition
 	if since > 0 {
-		start := time.Now().Add(-since)
-		position = store.PositionWithDate(
-			foundation.DateWithTimeIntervalSince1970(float64(start.Unix())),
-		)
+		position = store.PositionWithDate(time.Now().Add(-since))
 	}
 
 	// The values are interpolated as quoted literals, so the resulting predicate
@@ -81,7 +78,7 @@ func RecentViolations(since time.Duration, maxRows int) ([]Violation, error) {
 		return nil, fmt.Errorf("%w: invalid predicate", ErrLogStore)
 	}
 
-	enumerator, err := store.EntriesEnumeratorWithOptionsPositionPredicateError(
+	enumerator, err := store.EntriesEnumeratorWithOptionsPositionPredicate(
 		0,
 		position,
 		predicate,
@@ -167,16 +164,9 @@ func parseViolationProcess(message string) (string, int) {
 }
 
 func entryDate(entry *oslog.LogEntryLog) time.Time {
-	dateObj := entry.Date()
-	if dateObj == nil {
-		return time.Time{}
-	}
-	date := foundation.DateFromID(obj.ID(dateObj))
-	if date == nil {
-		return time.Time{}
-	}
-	seconds := date.TimeIntervalSince1970()
-	return time.Unix(0, int64(seconds*float64(time.Second)))
+	// The bindings surface NSDate as time.Time directly (the zero time.Time
+	// for a nil date).
+	return entry.Date()
 }
 
 func violationSendString(id objc.ID, selector string) string {

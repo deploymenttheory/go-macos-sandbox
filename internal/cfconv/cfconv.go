@@ -9,7 +9,6 @@ import (
 	corefoundation "github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/framework/corefoundation"
 	foundation "github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/framework/foundation"
 	"github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/obj"
-	"github.com/deploymenttheory/go-bindings-macosplatform/opinionated/idiomatic/rt"
 
 	"github.com/deploymenttheory/go-macos-sandbox/entitlements"
 )
@@ -36,15 +35,15 @@ func ObjectValue(value obj.Object) (any, error) {
 	wrapper := foundation.NewMutableArrayWithCapacity(1)
 	wrapper.AddObject(value)
 
-	data, err := foundation.DataWithJSONObjectOptionsError(wrapper, 0)
+	data, err := foundation.DataWithJSONObjectOptions(wrapper, 0)
 	if err != nil {
 		return nil, fmt.Errorf("serialize entitlement value: %w", err)
 	}
-	if data == nil {
+	if len(data) == 0 {
 		return nil, fmt.Errorf("%w: empty JSON for entitlement value", entitlements.ErrMalformedEntitlements)
 	}
 	var result []any
-	if err := json.Unmarshal(rt.NSDataToBytes(obj.ID(data)), &result); err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("decode entitlement value: %w", err)
 	}
 	if len(result) == 0 {

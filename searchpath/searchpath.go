@@ -13,7 +13,7 @@ var errContainerNotFound = errors.New("sandbox container not found")
 
 // SearchPathURL returns a standard directory URL for a sandboxed app container.
 func SearchPathURL(directory foundation.SearchPathDirectory, domain foundation.SearchPathDomainMask, shouldCreate bool) (string, error) {
-	url, err := foundation.DefaultManager().URLForDirectoryInDomainAppropriateForURLCreateError(
+	path, err := foundation.DefaultManager().URLForDirectoryInDomainAppropriateForURLCreate(
 		directory,
 		domain,
 		"",
@@ -22,7 +22,7 @@ func SearchPathURL(directory foundation.SearchPathDirectory, domain foundation.S
 	if err != nil {
 		return "", err
 	}
-	return containerURLPath(url)
+	return containerURLPath(path)
 }
 
 // DocumentDirectory returns the user Documents directory inside the app container when sandboxed.
@@ -55,11 +55,9 @@ func LibraryDirectory(shouldCreate bool) (string, error) {
 	return SearchPathURL(foundation.LibraryDirectory, foundation.UserDomainMask, shouldCreate)
 }
 
-func containerURLPath(url *foundation.URL) (string, error) {
-	if url == nil {
-		return "", errContainerNotFound
-	}
-	path := url.Path()
+// containerURLPath validates the filesystem path resolved from a container
+// directory URL (the bindings return file URLs as plain paths).
+func containerURLPath(path string) (string, error) {
 	if path == "" {
 		return "", errContainerNotFound
 	}

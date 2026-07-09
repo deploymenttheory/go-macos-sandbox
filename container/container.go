@@ -93,11 +93,9 @@ func ContainerDataPath(homeDir, bundleID string) string {
 	return filepath.Join(homeDir, "Library", "Containers", bundleID, "Data")
 }
 
-func containerURLPath(url *foundation.URL) (string, error) {
-	if url == nil {
-		return "", ErrContainerNotFound
-	}
-	path := url.Path()
+// containerURLPath validates the filesystem path resolved from a container
+// URL (the bindings return file URLs as plain paths).
+func containerURLPath(path string) (string, error) {
 	if path == "" {
 		return "", ErrContainerNotFound
 	}
